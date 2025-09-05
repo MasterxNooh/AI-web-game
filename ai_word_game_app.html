@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Smart Word Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .main-game {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stats-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            height: fit-content;
+        }
+
+        .hangman-display {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            white-space: pre-line;
+            text-align: center;
+            margin: 20px 0;
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .word-display {
+            font-size: 2.5em;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            letter-spacing: 0.2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .input-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .letter-input {
+            font-size: 1.5em;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            text-align: center;
+            width: 80px;
+            margin-right: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .letter-input:focus {
+            outline: none;
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #ff6b6b, #ffa726);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+
+        .btn-hint {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .guessed-letters {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .letter-badge {
+            display: inline-block;
+            margin: 3px;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 0.9em;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .letter-correct {
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            color: white;
+        }
+
+        .letter-wrong {
+            background: linear-gradient(45deg, #f44336, #e91e63);
+            color: white;
+        }
+
+        .stats-item {
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .stats-label {
+            font-weight: 600;
+            color: #ffd54f;
+            margin-bottom: 5px;
+        }
+
+        .hint-display {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            animation: pulse 0.5s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .game-over, .game-won {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            transform: scale(0.8);
+            animation: modalAppear 0.5s ease forwards;
+        }
+
+        .modal h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            transition: width 0.3s ease;
+        }
+
+        .difficulty-indicator {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .difficulty-easy { background: linear-gradient(45deg, #4CAF50, #8BC34A); }
+        .difficulty-medium { background: linear-gradient(45deg, #ff9800, #ffc107); }
+        .difficulty-hard { background: linear-gradient(45deg, #f44336, #e91e63); }
+
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes modalAppear {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .word-display {
+                font-size: 2em;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .ai-thinking {
+            display: inline-block;
+            animation: thinking 2s infinite;
+        }
+
+        @keyframes thinking {
+            0%, 20% { opacity: 1; }
+            50% { opacity: 0.5; }
+            80%, 100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Smart Word Game</h1>
+            <p>The AI learns from your playing style and adapts to challenge you!</p>
+        </div>
+
+        <div class="game-container">
+            <div class="main-game">
+                <div class="difficulty-section">
+                    <strong>Difficulty: </strong>
+                    <span class="difficulty-indicator difficulty-easy" id="difficultyIndicator">EASY</span>
+                </div>
+
+                <div class="hangman-display" id="hangmanDisplay"></div>
+
+                <div class="word-display" id="wordDisplay">_ _ _ _ _</div>
+
+                <div class="input-section">
+                    <input type="text" class="letter-input" id="letterInput" maxlength="1" placeholder="?">
+                    <button class="btn btn-primary" onclick="guessLetter()">Guess</button>
+                    <button class="btn btn-hint" onclick="getHint()">💡 Hint</button>
+                    <button class="btn btn-secondary" onclick="newGame()">New Game</button>
+                </div>
+
+                <div class="hint-display hidden" id="hintDisplay"></div>
+
+                <div class="guessed-letters">
+                    <div><strong>Correct Letters:</strong></div>
+                    <div id="correctLetters"></div>
+                    <div><strong>Wrong Letters:</strong></div>
+                    <div id="wrongLetters"></div>
+                </div>
+            </div>
+
+            <div class="stats-panel">
+                <h3 style="text-align: center; margin-bottom: 20px;">🧠 AI Analytics</h3>
+                
+                <div class="stats-item">
+                    <div class="stats-label">Games Played</div>
+                    <div id="gamesPlayed">0</div>
+                </div>
+
+                <div class="stats-item">
+                    <div class="stats-label">Success Rate</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="successRate" style="width: 0%"></div>
+                    </div>
+                    <div id="successText">0%</div>
+                </div>
+
+                <div class="stats-item">
+                    <div class="stats-label">Average Guesses</div>
+                    <div id="avgGuesses">0</div>
+                </div>
+
+                <div class="stats-item">
+                    <div class="stats-label">Favorite Letters</div>
+                    <div id="favoriteLetters">None yet</div>
+                </div>
+
+                <div class="stats-item">
+                    <div class="stats-label">AI Status</div>
+                    <div id="aiStatus">🤖 Learning your patterns...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class AIWordGame {
+            constructor() {
+                this.wordCategories = {
+                    easy: ['CAT', 'DOG', 'SUN', 'CAR', 'BOOK', 'TREE', 'FISH', 'BIRD', 'MOON', 'STAR'],
+                    medium: ['PYTHON', 'COMPUTER', 'RAINBOW', 'ELEPHANT', 'BUTTERFLY', 'MOUNTAIN', 'OCEAN', 'GALAXY'],
+                    hard: ['ALGORITHM', 'ARTIFICIAL', 'INTELLIGENCE', 'PROGRAMMING', 'TECHNOLOGY', 'CREATIVITY', 'PHILOSOPHY']
+                };
+
+                this.playerStats = {
+                    gamesPlayed: 0,
+                    totalGuesses: 0,
+                    correctGuesses: 0,
+                    gamesWon: 0,
+                    letterFreq: {},
+                    difficultyPerformance: { easy: 0, medium: 0, hard: 0 }
+                };
+
+                this.currentWord = '';
+                this.guessedLetters = new Set();
+                this.wrongGuesses = [];
+                this.correctGuesses = [];
+                this.maxWrong = 6;
+                this.difficulty = 'easy';
+                this.gameActive = true;
+
+                this.hangmanStages = [
+                    "  +---+\n      |\n      |\n      |\n      |\n=========",
+                    "  +---+\n  |   |\n      |\n      |\n      |\n=========",
+                    "  +---+\n  |   |\n  O   |\n      |\n      |\n=========",
+                    "  +---+\n  |   |\n  O   |\n  |   |\n      |\n=========",
+                    "  +---+\n  |   |\n  O   |\n /|   |\n      |\n=========",
+                    "  +---+\n  |   |\n  O   |\n /|\\  |\n      |\n=========",
+                    "  +---+\n  |   |\n  O   |\n /|\\  |\n /    |\n========="
+                ];
+
+                this.loadStats();
+                this.newGame();
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('letterInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.guessLetter();
+                    }
+                });
+
+                document.getElementById('letterInput').addEventListener('input', (e) => {
+                    e.target.value = e.target.value.toUpperCase();
+                });
+            }
+
+            analyzeDifficulty() {
+                if (this.playerStats.gamesPlayed < 3) return 'easy';
+
+                const successRate = this.playerStats.gamesWon / this.playerStats.gamesPlayed;
+                const avgGuesses = this.playerStats.totalGuesses / this.playerStats.gamesPlayed;
+
+                if (successRate > 0.7 && avgGuesses < 8) {
+                    if (this.difficulty === 'easy') return 'medium';
+                    if (this.difficulty === 'medium') return 'hard';
+                } else if (successRate < 0.3) {
+                    if (this.difficulty === 'hard') return 'medium';
+                    if (this.difficulty === 'medium') return 'easy';
+                }
+
+                return this.difficulty;
+            }
+
+            selectWord() {
+                this.difficulty = this.analyzeDifficulty();
+                const words = this.wordCategories[this.difficulty];
+                this.currentWord = words[Math.floor(Math.random() * words.length)];
+                
+                // Update difficulty indicator
+                const indicator = document.getElementById('difficultyIndicator');
+                indicator.textContent = this.difficulty.toUpperCase();
+                indicator.className = `difficulty-indicator difficulty-${this.difficulty}`;
+            }
+
+            generateHint() {
+                const hints = [];
+                const vowels = 'AEIOU';
+                const wordVowels = [...this.currentWord].filter(letter => vowels.includes(letter));
+                
+                hints.push(`This word has ${this.currentWord.length} letters`);
+                
+                if (wordVowels.length > this.currentWord.length / 2) {
+                    hints.push("This word has many vowels");
+                } else {
+                    hints.push("This word has more consonants than vowels");
+                }
+
+                if (this.currentWord.length > 6) {
+                    hints.push("This is a longer word - try common letters like R, S, T, N");
+                }
+
+                // AI learning-based hint
+                const commonLetters = Object.entries(this.playerStats.letterFreq)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3)
+                    .map(([letter]) => letter);
+
+                const wordLetters = [...this.currentWord];
+                const overlap = commonLetters.filter(letter => wordLetters.includes(letter));
+                
+                if (overlap.length > 0) {
+                    hints.push(`Based on your patterns, try: ${overlap.slice(0, 2).join(', ')}`);
+                }
+
+                return hints[Math.floor(Math.random() * hints.length)];
+            }
+
+            displayWord() {
+                let display = '';
+                for (let letter of this.currentWord) {
+                    if (this.guessedLetters.has(letter)) {
+                        display += letter + ' ';
+                    } else {
+                        display += '_ ';
+                    }
+                }
+                document.getElementById('wordDisplay').textContent = display.trim();
+            }
+
+            displayHangman() {
+                document.getElementById('hangmanDisplay').textContent = 
+                    this.hangmanStages[this.wrongGuesses.length];
+            }
+
+            updateGuessedLetters() {
+                const correctDiv = document.getElementById('correctLetters');
+                const wrongDiv = document.getElementById('wrongLetters');
+
+                correctDiv.innerHTML = this.correctGuesses
+                    .map(letter => `<span class="letter-badge letter-correct">${letter}</span>`)
+                    .join('');
+
+                wrongDiv.innerHTML = this.wrongGuesses
+                    .map(letter => `<span class="letter-badge letter-wrong">${letter}</span>`)
+                    .join('');
+            }
+
+            updateStats() {
+                const successRate = this.playerStats.gamesPlayed > 0 
+                    ? (this.playerStats.gamesWon / this.playerStats.gamesPlayed * 100) 
+                    : 0;
+                
+                const avgGuesses = this.playerStats.gamesPlayed > 0 
+                    ? (this.playerStats.totalGuesses / this.playerStats.gamesPlayed) 
+                    : 0;
+
+                document.getElementById('gamesPlayed').textContent = this.playerStats.gamesPlayed;
+                document.getElementById('successRate').style.width = successRate + '%';
+                document.getElementById('successText').textContent = successRate.toFixed(1) + '%';
+                document.getElementById('avgGuesses').textContent = avgGuesses.toFixed(1);
+
+                // Favorite letters
+                const topLetters = Object.entries(this.playerStats.letterFreq)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5)
+                    .map(([letter]) => letter);
+                
+                document.getElementById('favoriteLetters').textContent = 
+                    topLetters.length > 0 ? topLetters.join(', ') : 'None yet';
+
+                // AI Status
+                let aiStatus = '🤖 Learning...';
+                if (this.playerStats.gamesPlayed > 5) {
+                    aiStatus = `🧠 Adapted to ${this.difficulty} difficulty`;
+                } else if (this.playerStats.gamesPlayed > 2) {
+                    aiStatus = '📊 Analyzing your patterns...';
+                }
+                document.getElementById('aiStatus').innerHTML = aiStatus + ' <span class="ai-thinking">●●●</span>';
+            }
+
+            guessLetter() {
+                if (!this.gameActive) return;
+
+                const input = document.getElementById('letterInput');
+                const letter = input.value.toUpperCase().trim();
+
+                if (!letter || letter.length !== 1 || !/[A-Z]/.test(letter)) {
+                    alert('Please enter a single letter!');
+                    return;
+                }
+
+                if (this.guessedLetters.has(letter)) {
+                    alert('You already guessed that letter!');
+                    return;
+                }
+
+                this.guessedLetters.add(letter);
+                input.value = '';
+
+                // Update AI learning
+                this.playerStats.letterFreq[letter] = (this.playerStats.letterFreq[letter] || 0) + 1;
+                this.playerStats.totalGuesses++;
+
+                if (this.currentWord.includes(letter)) {
+                    this.correctGuesses.push(letter);
+                    
+                    // Check win condition
+                    if ([...this.currentWord].every(l => this.guessedLetters.has(l))) {
+                        this.gameWon();
+                        return;
+                    }
+                } else {
+                    this.wrongGuesses.push(letter);
+                    
+                    // Check lose condition
+                    if (this.wrongGuesses.length >= this.maxWrong) {
+                        this.gameOver();
+                        return;
+                    }
+                }
+
+                this.updateDisplay();
+            }
+
+            gameWon() {
+                this.gameActive = false;
+                this.playerStats.gamesWon++;
+                this.playerStats.gamesPlayed++;
+                this.playerStats.difficultyPerformance[this.difficulty]++;
+                
+                this.saveStats();
+                this.updateStats();
+                
+                setTimeout(() => {
+                    this.showModal('🎉 Congratulations!', 
+                        `You guessed "${this.currentWord}" correctly!<br>
+                         Guesses: ${this.guessedLetters.size}<br>
+                         The AI is learning from your success!`, 
+                        'game-won');
+                }, 500);
+            }
+
+            gameOver() {
+                this.gameActive = false;
+                this.playerStats.gamesPlayed++;
+                
+                this.saveStats();
+                this.updateStats();
+                
+                setTimeout(() => {
+                    this.showModal('💀 Game Over!', 
+                        `The word was "${this.currentWord}"<br>
+                         Don't worry, the AI will adjust the difficulty!`, 
+                        'game-over');
+                }, 500);
+            }
+
+            showModal(title, message, className) {
+                const modal = document.createElement('div');
+                modal.className = className;
+                modal.innerHTML = `
+                    <div class="modal">
+                        <h2>${title}</h2>
+                        <p>${message}</p>
+                        <button class="btn btn-primary" onclick="this.parentElement.parentElement.remove(); game.newGame()">
+                            Play Again
+                        </button>
+                        <button class="btn btn-secondary" onclick="this.parentElement.parentElement.remove()">
+                            View Stats
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+
+            getHint() {
+                const hint = this.generateHint();
+                const hintDisplay = document.getElementById('hintDisplay');
+                hintDisplay.textContent = `💡 AI Hint: ${hint}`;
+                hintDisplay.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    hintDisplay.classList.add('hidden');
+                }, 5000);
+            }
+
+            newGame() {
+                this.selectWord();
+                this.guessedLetters.clear();
+                this.wrongGuesses = [];
+                this.correctGuesses = [];
+                this.gameActive = true;
+                
+                document.getElementById('hintDisplay').classList.add('hidden');
+                document.getElementById('letterInput').focus();
+                
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                this.displayWord();
+                this.displayHangman();
+                this.updateGuessedLetters();
+                this.updateStats();
+            }
+
+            saveStats() {
+                localStorage.setItem('aiWordGameStats', JSON.stringify(this.playerStats));
+            }
+
+            loadStats() {
+                const saved = localStorage.getItem('aiWordGameStats');
+                if (saved) {
+                    this.playerStats = { ...this.playerStats, ...JSON.parse(saved) };
+                }
+            }
+        }
+
+        // Initialize game
+        let game;
+        window.onload = () => {
+            game = new AIWordGame();
+        };
+
+        // Global functions for buttons
+        function guessLetter() {
+            game.guessLetter();
+        }
+
+        function getHint() {
+            game.getHint();
+        }
+
+        function newGame() {
+            game.newGame();
+        }
+    </script>
+</body>
+</html>
